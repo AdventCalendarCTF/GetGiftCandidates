@@ -1,0 +1,4 @@
+{
+    "name": "Gift candidate retrieval",
+    "route": "/admin/candidates"
+}

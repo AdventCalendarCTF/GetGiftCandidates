@@ -1,0 +1,349 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+  <div class="container">
+    <div class="nav nav-tabs nav-fill pt-5">
+      <a class="nav-item nav-link active" data-toggle="tab" href="#candidates" role="tab">Candidates</a>
+      <a class="nav-item nav-link" data-toggle="tab" href="#countries" role="tab">Configure countries</a>
+      <a class="nav-item nav-link" data-toggle="tab" href="#domains" role="tab">Configure domains</a>
+    </div>
+    <div id="nav-tabContent" class="tab-content">
+      
+      <div id="countries" class="tab-pane fade" role="tabpanel">
+        <h2>Allowed Country</h2>
+        <div id="allowed_country">
+          {% for country in countries %}
+            <div>
+              <span id="allow_{{country.value}}">{{country.value}}</span>
+              <button id="remove_country_{{country.id}}" onclick="removeCountry('{{country.id}}')">Remove</button>
+            </div>
+          {% endfor %}
+        </div>
+        <select id="new_country">
+          {% for country in countries_list %}
+            <option value="{{country[0]}}">{{country[1]}}</option>
+          {% endfor %}
+        </select>
+        <button id="add_country" onclick="addCountry()">Add</button>
+      </div>
+      <div id="domains" class="tab-pane fade" role="tabpanel">
+        <h2>Allowed email domains</h2>
+        <div id="allowed_email_domains">
+          {% for domain in domains %}
+            <div>
+              <span id="allow_{{domain.value}}">{{domain.value}}</span>
+              <button id="remove_domain_{{domain.id}}" onclick="removeDomain('{{domain.id}}')">Remove</button>
+            </div>
+          {% endfor %}
+        </div>
+        <input type="text" id="domain" placeholder="Domain" onkeydown="domainNewKey();">
+      </div>
+      <div id="candidates"  class="tab-pane fade show active" role="tabpanel">
+        <h2>Choose Period</h2>
+        <div>
+          <input type="text" id="first_day" placeholder="first day (dd/mm/yyyy)">
+          <input type="text" id="last_day" placeholder="last_day (dd/mm/yyyy)">
+          <button id="get_candidates" onclick="retrieveCandidates()">Get gift candidates</button>
+          <a id="download_candidates" style="display: none;" >download as csv</a>
+        </div>
+        <div id="display_candidates"></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function addCountry() {
+      var country = document.getElementById('new_country').value;
+      var url = '/admin/candidates/country';
+      var data = {
+        country: country
+      };
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'CSRF-Token': init.csrfNonce,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(data => {
+        if (data.success) {
+          document.getElementById('new_country').value = '';
+          reloadCountries();
+        } else {
+          console.log(data);
+        }
+      }).catch(error => {
+        console.log(error);
+        document.getElementById('new_country').value = '';
+        reloadCountries();
+        
+      });
+    }
+  
+    function reloadCountries() {
+      var url = '/admin/candidates/country';
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(data => {
+        var allowed_country = document.getElementById('allowed_country');
+        allowed_country.innerHTML = '';
+        data.data.forEach(country => {
+          var div = document.createElement('div');
+          var span = document.createElement('span');
+          span.id = 'allow_' + country.value;
+          span.innerHTML = country.value;
+          var button = document.createElement('button');
+          button.id = 'remove_country_' + country.id;
+          button.innerHTML = 'Remove';
+          button.onclick = function() {
+            removeCountry(country.id);
+          };
+          div.appendChild(span);
+          div.appendChild(button);
+          allowed_country.appendChild(div);
+        });
+      }).catch(error => {
+        console.log(error);
+      });
+    }
+    function removeCountry(id) {
+      var url = '/admin/candidates/country/' + id;
+      fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'CSRF-Token': init.csrfNonce,
+          'Content-Type': 'application/json',
+        }
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(data => {
+        reloadCountries();
+      }).catch(error => {
+        console.log(error);
+        reloadCountries();
+      });
+    }
+    function domainNewKey() {
+      if (event.keyCode === 13) {
+        addDomain();
+      }
+    }
+    function addDomain() {
+      var domain = document.getElementById('domain').value;
+      var url = '/admin/candidates/domain';
+      var data = {
+        domain: domain
+      };
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'CSRF-Token': init.csrfNonce,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.success) {
+          return response.json();
+        }
+      }).then(data => {
+        if (data.success) {
+          document.getElementById('domain').value = '';
+          reloadDomains();
+        } else {
+          console.log(data);
+        }
+      }).catch(error => {
+        console.log(error);
+        document.getElementById('domain').value = '';
+        reloadDomains();
+      });
+    }
+    function reloadDomains() {
+      var url = '/admin/candidates/domain';
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(data => {
+        var allowed_email_domains = document.getElementById('allowed_email_domains');
+        allowed_email_domains.innerHTML = '';
+        data.data.forEach(domain => {
+          var div = document.createElement('div');
+          var span = document.createElement('span');
+          span.id = 'allow_' + domain.value;
+          span.innerHTML = domain.value;
+          var button = document.createElement('button');
+          button.id = 'remove_domain_' + domain.id;
+          button.innerHTML = 'Remove';
+          button.onclick = function() {
+            removeDomain(domain.id);
+          };
+          div.appendChild(span);
+          div.appendChild(button);
+          allowed_email_domains.appendChild(div);
+        });
+      }).catch(error => {
+        console.log(error);
+      });
+    }
+    function removeDomain(id) {
+      var url = '/admin/candidates/domain/' + id;
+      fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'CSRF-Token': init.csrfNonce,
+          'Content-Type': 'application/json',
+        }
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(data => {
+        reloadDomains();
+      }).catch(error => {
+        console.log(error);
+        reloadDomains();
+      });
+    }
+    function get_candidates() {
+      var first_day = document.getElementById('first_day').value;
+      var last_day = document.getElementById('last_day').value;
+      var url = '/admin/candidates/get_candidates';
+      var data = {
+        first_day: first_day,
+        last_day: last_day
+      };
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'CSRF-Token': init.csrfNonce,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.success) {
+          return response.json();
+        }
+      }).then(data => {
+        if (data.success) {
+          reloadCandidates();
+        } else {
+          console.log(data);
+        }
+      }).catch(error => {
+        console.log(error);
+        reloadCandidates();
+      });
+    }
+    function retrieveCandidates() {
+      var first_day = document.getElementById('first_day').value;
+      var last_day = document.getElementById('last_day').value;
+      var url = '/admin/candidates';
+      var data = {
+        first_day: first_day,
+        last_day: last_day
+      };
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'CSRF-Token': init.csrfNonce,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(data => {
+        if (data.success) {
+          var display_candidates = document.getElementById('display_candidates');
+          display_candidates.innerHTML = '';
+          var table = document.createElement('table');
+          table.className = 'table table-stripped border';
+          var thead = document.createElement('thead');
+          var tr = document.createElement('tr');
+          th = document.createElement('th');
+          th.className = "sort-col text-center";
+          th.innerText = 'Id';
+          tr.appendChild(th);
+          var th = document.createElement('th');
+          th.className = "sort-col text-center";
+          th.innerText = 'Email';
+          tr.appendChild(th);
+          th = document.createElement('th');
+          th.className = "sort-col text-center";
+          th.innerText = 'Country';
+          tr.appendChild(th);
+          th = document.createElement('th');
+          th.className = "sort-col text-center";
+          th.innerText = 'Valid solves';
+          tr.appendChild(th);
+          thead.appendChild(tr);
+          table.appendChild(thead);
+          var tbody = document.createElement('tbody');
+          data.data.forEach(candidate => {
+            tr = document.createElement('tr');
+            td = document.createElement('td');
+            td.className = "text-center";
+            td.innerText = candidate.id;
+            tr.appendChild(td);
+            var td = document.createElement('td');
+            td.className = "text-center";
+            td.innerText = candidate.email;
+            tr.appendChild(td);
+            td = document.createElement('td');
+            td.className = "text-center";
+            td.innerText = candidate.country;
+            tr.appendChild(td);
+            td = document.createElement('td');
+            td.className = "text-center";
+            td.innerText = candidate.count;
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          display_candidates.appendChild(table);
+          var download_candidates = document.getElementById('download_candidates');
+          download_candidates.onclick = function() {
+            var csv = 'Id,Email,Country,Valid solves\n';
+            data.data.forEach(candidate => {
+              csv += candidate.id + ',' + candidate.email + ',' + candidate.country + ',' + candidate.count + '\n';
+            });
+            var blob = new Blob([csv], {type: 'text/csv'});
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'candidates.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+          };
+          download_candidates.style.display = 'block';
+        } else {
+          console.log(data);
+        }
+      }).catch(error => {
+        console.log(error);
+      });
+    }
+  </script>
+{% endblock %}
