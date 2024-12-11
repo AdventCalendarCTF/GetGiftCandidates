@@ -24,8 +24,8 @@
         <div id="allowed_country">
           {% for country in countries %}
             <div>
-              <span id="allow_{{country.value}}">{{country.value}}</span>
-              <button id="remove_country_{{country.id}}" onclick="removeCountry('{{country.id}}')">Remove</button>
+              <span>{{country.value}}</span>
+              <a class="btn-fa delete-tag" onclick="removeCountry('{{country.id}}')">x</a>
             </div>
           {% endfor %}
         </div>
@@ -34,14 +34,14 @@
         <h3 class="text-center pt-5 d-block">Eligible email domains</h3>
         <div class="form-group">
           <label for="domain">Add a new domain</label>
-          <input type="text" id="domain" class="form-control" placeholder="Domain" onkeydown="domainNewKey();">
+          <input type="text" id="domain" class="form-control" placeholder="Domain" onkeydown="domainNewKey(event);">
         </div>
 
         <div id="allowed_email_domains">
           {% for domain in domains %}
             <div>
-              <span id="allow_{{domain.value}}">{{domain.value}}</span>
-              <button id="remove_domain_{{domain.id}}" onclick="removeDomain('{{domain.id}}')">Remove</button>
+              <span>{{domain.value}}</span>
+              <a class="btn-fa delete-tag" onclick="removeDomain('{{domain.id}}')">x</a>
             </div>
           {% endfor %}
         </div>

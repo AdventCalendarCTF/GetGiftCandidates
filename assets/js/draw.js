@@ -40,14 +40,14 @@ async function reloadCountries() {
         result.data.forEach(country => {
             const div = document.createElement('div');
             const span = document.createElement('span');
-            span.id = 'allow_' + country.value;
             span.innerHTML = country.value;
-            const button = document.createElement('button');
-            button.id = 'remove_country_' + country.id;
-            button.innerHTML = 'Remove';
-            button.onclick = () => removeCountry(country.id);
+            const a = document.createElement('a');
+            a.innerHTML = 'x';
+            a.className = "btn-fa delete-tag"
+            a.onclick = () => removeCountry(country.id);
             div.appendChild(span);
-            div.appendChild(button);
+            div.appendChild(document.createTextNode(' '));
+            div.appendChild(a);
             allowed_country.appendChild(div);
         });
     } catch (error) {
@@ -123,14 +123,14 @@ async function reloadDomains() {
         result.data.forEach(domain => {
             const div = document.createElement('div');
             const span = document.createElement('span');
-            span.id = 'allow_' + domain.value;
-            span.innerHTML = domain.value;
-            const button = document.createElement('button');
-            button.id = 'remove_domain_' + domain.id;
-            button.innerHTML = 'Remove';
-            button.onclick = () => removeDomain(domain.id);
+            span.innerText = domain.value;
+            const a = document.createElement('a');
+            a.innerText = 'x';
+            a.className = "btn-fa delete-tag"
+            a.onclick = () => removeDomain(domain.id);
             div.appendChild(span);
-            div.appendChild(button);
+            div.appendChild(document.createTextNode(' '));
+            div.appendChild(a);
             allowed_email_domains.appendChild(div);
         });
     } catch (error) {
